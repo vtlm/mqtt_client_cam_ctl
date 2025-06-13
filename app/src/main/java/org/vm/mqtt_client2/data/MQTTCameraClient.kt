@@ -21,23 +21,28 @@ class MQTTCameraClient (
 
 
     private var mqttClient: MQTTClient = MQTTClient(context,
-        listOf(Pair("CamFrame",1)),
-        ::receivedMessageHandler)
+        TopicHandler(mutableMapOf((listOf(Pair("CamFrame",1)) to ::receivedMessageHandler ))))
+
+
+
+//
     // @ApplicationContext val context: Context
 
     val _jpgImage = MutableStateFlow<Bitmap?>(null)
     val jpgImage: StateFlow<Bitmap?> = _jpgImage.asStateFlow()
 
     init{
+//        mqttClient.topicHandler.add( )
         GlobalScope.launch {
             while (!mqttClient.isConnected) {
                 delay(100)
             }
+
             mqttClient.publishMessage("CamCtl", "getFrame")
         }
     }
 
-    private fun receivedMessageHandler(topic: String, message: MqttMessage){
+    private fun receivedMessageHandler(message: MqttMessage){
         _jpgImage.value = BitmapFactory.decodeByteArray(message.payload, 0, message.payload.size )
         mqttClient.publishMessage("CamCtl","getFrame")
     }

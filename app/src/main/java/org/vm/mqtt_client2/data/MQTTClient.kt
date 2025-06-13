@@ -13,26 +13,30 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttMessage
 
 class MQTTClient (applicationContext: Context,
-                  private val topicsList: List<Pair<String, Int>>,
-                  val receivedMessageHandler: (topic: String, message: MqttMessage) -> Unit
+                  topicHandler : TopicHandler
+
+//                  private val topicsList: List<Pair<String, Int>>,
+//                  val receivedMessageHandler: (topic: String, message: MqttMessage) -> Unit
 ){
+
 
     var isConnected = false
 
-    private lateinit var mqttAndroidClient: MqttAndroidClient
+    private var mqttAndroidClient: MqttAndroidClient = MqttAndroidClient(applicationContext, SERVER_URI, clientId)
+
 
     init{
-        mqttAndroidClient = MqttAndroidClient(applicationContext, SERVER_URI, clientId)
         mqttAndroidClient.setCallback(object : MqttCallbackExtended {
             override fun connectComplete(reconnect: Boolean, serverURI: String) {
                 if (reconnect) {
                     addToHistory("Reconnected: $serverURI")
                     // Because Clean Session is true, we need to re-subscribe
 
-                    topicsList.forEach {
-                        val (topic, qos) = it
-                        subscribeToTopic(topic, qos)
-                    }
+//                    topicsList.forEach {
+//                        val (topic, qos) = it
+//                        subscribeToTopic(topic, qos)
+//                    }
+                    topicHandler.subscribe(mqttAndroidClient)
 
                     isConnected = true
 
@@ -47,7 +51,9 @@ class MQTTClient (applicationContext: Context,
 
             override fun messageArrived(topic: String, message: MqttMessage) {
 
-                receivedMessageHandler(topic, message)
+
+                topicHandler.handle(topic, message)
+//                receivedMessageHandler(topic, message)
 
 //                val data = String(message.payload, charset("UTF-8"))
 //                Log.d("MQTT_D", "arrived: $topic $data")
@@ -73,10 +79,11 @@ class MQTTClient (applicationContext: Context,
                 }
                 mqttAndroidClient.setBufferOpts(disconnectedBufferOptions)
 
-                topicsList.forEach {
-                    val (topic, qos) = it
-                    subscribeToTopic(topic, qos)
-                }
+                topicHandler.subscribe(mqttAndroidClient)
+//                topicsList.forEach {
+//                    val (topic, qos) = it
+//                    subscribeToTopic(topic, qos)
+//                }
                 isConnected = true
             }
 
@@ -85,7 +92,9 @@ class MQTTClient (applicationContext: Context,
             }
         })
 
-    }
+    }//init
+
+//    fun addTopicHandler()
 
     fun subscribeToTopic(topic: String, qos: Int) {
         mqttAndroidClient.subscribe(topic, qos, null, object : IMqttActionListener {
