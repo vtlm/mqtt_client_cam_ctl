@@ -12,8 +12,8 @@ import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttMessage
 
-class MQTTClient (applicationContext: Context,
-                  topicHandler : TopicHandler
+class MQTTClient (applicationContext: Context
+
 
 //                  private val topicsList: List<Pair<String, Int>>,
 //                  val receivedMessageHandler: (topic: String, message: MqttMessage) -> Unit
@@ -23,7 +23,7 @@ class MQTTClient (applicationContext: Context,
     var isConnected = false
 
     private var mqttAndroidClient: MqttAndroidClient = MqttAndroidClient(applicationContext, SERVER_URI, clientId)
-
+    val topicHandler = TopicHandler()
 
     init{
         mqttAndroidClient.setCallback(object : MqttCallbackExtended {
@@ -79,7 +79,8 @@ class MQTTClient (applicationContext: Context,
                 }
                 mqttAndroidClient.setBufferOpts(disconnectedBufferOptions)
 
-                topicHandler.subscribe(mqttAndroidClient)
+//                topicHandler.subscribe(mqttAndroidClient)
+
 //                topicsList.forEach {
 //                    val (topic, qos) = it
 //                    subscribeToTopic(topic, qos)
@@ -95,6 +96,10 @@ class MQTTClient (applicationContext: Context,
     }//init
 
 //    fun addTopicHandler()
+
+    fun subscribe(topicList: List<Pair<String, Int>>, handler: (MqttMessage) -> Unit){
+        topicHandler.addAndSubscribe(mqttAndroidClient, topicList, handler)
+    }
 
     fun subscribeToTopic(topic: String, qos: Int) {
         mqttAndroidClient.subscribe(topic, qos, null, object : IMqttActionListener {

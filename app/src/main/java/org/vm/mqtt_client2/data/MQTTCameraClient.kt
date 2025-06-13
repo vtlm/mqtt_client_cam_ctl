@@ -12,34 +12,20 @@ import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.MqttMessage
 
 class MQTTCameraClient (
-    context: Context,
+    val mqttClient: MQTTClient
+//    context: Context,
 //    private val clientuser: String
 ) {
 
 //    @Inject
 //    lateinit var userPreferencesRepository: UserPreferencesRepository
 
-
-    private var mqttClient: MQTTClient = MQTTClient(context,
-        TopicHandler(mutableMapOf((listOf(Pair("CamFrame",1)) to ::receivedMessageHandler ))))
-
-
-
-//
-    // @ApplicationContext val context: Context
-
     val _jpgImage = MutableStateFlow<Bitmap?>(null)
     val jpgImage: StateFlow<Bitmap?> = _jpgImage.asStateFlow()
 
     init{
-//        mqttClient.topicHandler.add( )
-        GlobalScope.launch {
-            while (!mqttClient.isConnected) {
-                delay(100)
-            }
-
-            mqttClient.publishMessage("CamCtl", "getFrame")
-        }
+        mqttClient.subscribe(listOf(Pair("CamFrame",1)), ::receivedMessageHandler)
+        mqttClient.publishMessage("CamCtl", "getFrame")
     }
 
     private fun receivedMessageHandler(message: MqttMessage){
@@ -48,7 +34,6 @@ class MQTTCameraClient (
     }
 
 }
-
 
 //class MQTTCameraClient @Inject constructor(
 //    private val clientId: String,

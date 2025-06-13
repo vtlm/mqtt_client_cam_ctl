@@ -4,10 +4,10 @@ import info.mqtt.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.IMqttActionListener
 import org.eclipse.paho.client.mqttv3.IMqttToken
 import org.eclipse.paho.client.mqttv3.MqttMessage
-//import org.vm.mqtt_client2.data.MQTTClient.Companion.SUBSCRIPTION_TOPIC
 
-class TopicHandler(val topicsHandlers:  MutableMap<List<Pair<String, Int>>, (MqttMessage) -> Unit>) {
+class TopicHandler() {
 
+    val topicsHandlers = mutableMapOf<List<Pair<String, Int>>, (MqttMessage) -> Unit> ()
 
     fun add(topicList: List<Pair<String, Int>>, handler: (MqttMessage) -> Unit){
         topicsHandlers[topicList] = handler
