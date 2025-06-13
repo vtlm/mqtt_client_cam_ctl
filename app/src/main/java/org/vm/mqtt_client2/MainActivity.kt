@@ -72,12 +72,12 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ShowCamClients(camClients: MutableList<MQTTCameraClient>){
+fun ShowCamClients(camClients: List<MQTTCameraClient>){
     LazyColumn {
         camClients.forEach {
-            val bm = it.jpgImage.value
+//            val bm = it.jpgImage.value
             item {
-                BitmapImage(bm)
+                BitmapImage(it)
             }
         }
     }
@@ -85,8 +85,9 @@ fun ShowCamClients(camClients: MutableList<MQTTCameraClient>){
 }
 
 @Composable
-fun BitmapImage(bitmap: Bitmap?) {
+fun BitmapImage(mqttCameraClient: MQTTCameraClient) {
 //  if(mqttCameraClient != null) {
+    val bitmap = mqttCameraClient.jpgImage.collectAsState().value
 
     if(bitmap != null) {
         Image(

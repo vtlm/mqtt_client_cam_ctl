@@ -135,10 +135,10 @@ class MQTTClient (applicationContext: Context
         }
     }
 
-    private fun addToHistory(str: String){
-//        Timber.tag("MQTT_D").d(str)
-        Log.d("MQTT_D",str)
-    }
+//    private fun addToHistory(str: String){
+////        Timber.tag("MQTT_D").d(str)
+//        Log.d("MQTT_D",str)
+//    }
 
     companion object {
                 private const val SERVER_URI = "tcp://375333526167.dyndns.mts.by:1883"
@@ -153,4 +153,10 @@ class MQTTClient (applicationContext: Context
     fun disconnect(){
         mqttAndroidClient.disconnect()
     }
+}
+
+
+fun addToHistory(str: String){
+//        Timber.tag("MQTT_D").d(str)
+    Log.d("MQTT_D",str)
 }

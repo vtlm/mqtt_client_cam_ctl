@@ -29,6 +29,7 @@ class MQTTCameraClient (
     }
 
     private fun receivedMessageHandler(message: MqttMessage){
+        addToHistory("size of bitmap ${message.payload.size}")
         _jpgImage.value = BitmapFactory.decodeByteArray(message.payload, 0, message.payload.size )
         mqttClient.publishMessage("CamCtl","getFrame")
     }

@@ -23,15 +23,17 @@ class AppViewModel  @Inject constructor(
 //        TopicHandler(mutableMapOf((listOf(Pair("CamFrame",1)) to ::receivedMessageHandler ))))
 //    var mqttCamClient: MQTTCameraClient? = null
 
-    private var _camClients = MutableStateFlow(mutableListOf<MQTTCameraClient>())
-    val camClients: StateFlow<MutableList<MQTTCameraClient>> = _camClients.asStateFlow()
+    private var _camClients = MutableStateFlow(listOf<MQTTCameraClient>())
+    val camClients: StateFlow<List<MQTTCameraClient>> = _camClients.asStateFlow()
 
     init {
         viewModelScope.launch(Dispatchers.Default){
             while (!mqttClient.isConnected) {
                 delay(100)
             }
-            _camClients.value += MQTTCameraClient(mqttClient)
+            _camClients.value = _camClients.value.plus(MQTTCameraClient(mqttClient))
+            _camClients.value = _camClients.value.plus(MQTTCameraClient(mqttClient))
+            _camClients.value = _camClients.value.plus(MQTTCameraClient(mqttClient))
         }
     }
 
