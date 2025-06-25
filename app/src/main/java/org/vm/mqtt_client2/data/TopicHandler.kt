@@ -13,7 +13,9 @@ class TopicHandler() {
         topicsHandlers[topicList] = handler
     }
 
-    fun addAndSubscribe(mqttAndroidClient: MqttAndroidClient, topicList: List<Pair<String, Int>>, handler: (MqttMessage) -> Unit){
+    fun addAndSubscribe(mqttAndroidClient: MqttAndroidClient,
+                        topicList: List<Pair<String, Int>>,
+                        handler: (MqttMessage) -> Unit){
         add(topicList,handler)
         subscribe(mqttAndroidClient, topicList)
     }
@@ -24,7 +26,7 @@ class TopicHandler() {
             mqttAndroidClient.subscribe(topic, qos, null, object : IMqttActionListener {
                 override fun onSuccess(asyncActionToken: IMqttToken) {
                     addToHistory("Subscribed! $topic")
-//                publishMessage("CamCtl", "getFrame")
+                publishMessage("CamCtl", "getFrame")
                 }
 
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {

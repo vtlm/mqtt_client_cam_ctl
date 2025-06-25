@@ -76,7 +76,7 @@ fun ShowCamClients(camClients: List<MQTTCameraClient>){
     LazyColumn {
         camClients.forEach {
 //            val bm = it.jpgImage.value
-            item {
+            item (key = System.identityHashCode(it)){
                 BitmapImage(it)
             }
         }

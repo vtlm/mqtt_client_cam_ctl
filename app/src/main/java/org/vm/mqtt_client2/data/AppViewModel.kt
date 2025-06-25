@@ -31,9 +31,9 @@ class AppViewModel  @Inject constructor(
             while (!mqttClient.isConnected) {
                 delay(100)
             }
-            _camClients.value = _camClients.value.plus(MQTTCameraClient(mqttClient))
-            _camClients.value = _camClients.value.plus(MQTTCameraClient(mqttClient))
-            _camClients.value = _camClients.value.plus(MQTTCameraClient(mqttClient))
+            _camClients.value = _camClients.value.plus(MQTTCameraClient("152", mqttClient))
+//            _camClients.value = _camClients.value.plus(MQTTCameraClient("153", mqttClient))
+//            _camClients.value = _camClients.value.plus(MQTTCameraClient("154", mqttClient))
         }
     }
 

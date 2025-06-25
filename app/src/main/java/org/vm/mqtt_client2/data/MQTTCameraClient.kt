@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.MqttMessage
 
 class MQTTCameraClient (
+    val name: String,
     val mqttClient: MQTTClient
 //    context: Context,
 //    private val clientuser: String
@@ -29,7 +30,7 @@ class MQTTCameraClient (
     }
 
     private fun receivedMessageHandler(message: MqttMessage){
-        addToHistory("size of bitmap ${message.payload.size}")
+        addToHistory("$name: size of bitmap ${message.payload.size}")
         _jpgImage.value = BitmapFactory.decodeByteArray(message.payload, 0, message.payload.size )
         mqttClient.publishMessage("CamCtl","getFrame")
     }
