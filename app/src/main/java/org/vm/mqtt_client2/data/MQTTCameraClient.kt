@@ -25,13 +25,13 @@ class MQTTCameraClient (
 
     init{
         mqttClient.subscribe(listOf(Pair("CamFrame",1)), ::receivedMessageHandler)
-        mqttClient.publishMessage("CamCtl", "getFrame")
+        mqttClient.publishMessage("CamCtl/152", "getFrame")
     }
 
     private fun receivedMessageHandler(message: MqttMessage){
         addToHistory("size of bitmap ${message.payload.size}")
         _jpgImage.value = BitmapFactory.decodeByteArray(message.payload, 0, message.payload.size )
-        mqttClient.publishMessage("CamCtl","getFrame")
+        mqttClient.publishMessage("CamCtl/152","getFrame")
     }
 
 }

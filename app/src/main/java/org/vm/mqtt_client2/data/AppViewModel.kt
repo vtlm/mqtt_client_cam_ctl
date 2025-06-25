@@ -32,8 +32,8 @@ class AppViewModel  @Inject constructor(
                 delay(100)
             }
             _camClients.value = _camClients.value.plus(MQTTCameraClient(mqttClient))
-            _camClients.value = _camClients.value.plus(MQTTCameraClient(mqttClient))
-            _camClients.value = _camClients.value.plus(MQTTCameraClient(mqttClient))
+//            _camClients.value = _camClients.value.plus(MQTTCameraClient(mqttClient))
+//            _camClients.value = _camClients.value.plus(MQTTCameraClient(mqttClient))
         }
     }
 
