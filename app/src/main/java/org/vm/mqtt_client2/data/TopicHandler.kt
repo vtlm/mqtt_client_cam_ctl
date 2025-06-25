@@ -26,7 +26,7 @@ class TopicHandler() {
             mqttAndroidClient.subscribe(topic, qos, null, object : IMqttActionListener {
                 override fun onSuccess(asyncActionToken: IMqttToken) {
                     addToHistory("Subscribed! $topic")
-                publishMessage("CamCtl", "getFrame")
+//                publishMessage("CamCtl", "getFrame")
                 }
 
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
