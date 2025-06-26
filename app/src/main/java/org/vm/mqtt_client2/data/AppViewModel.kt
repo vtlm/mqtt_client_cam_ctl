@@ -19,14 +19,26 @@ class AppViewModel  @Inject constructor(
     @ApplicationContext val context: Context
 ): ViewModel() {
 
-    private var mqttClient = MQTTClient(context)
+    private var mqttClient = MQTTClient(context, this)
 //        TopicHandler(mutableMapOf((listOf(Pair("CamFrame",1)) to ::receivedMessageHandler ))))
 //    var mqttCamClient: MQTTCameraClient? = null
+
+
+
+    var _isOnGuard = MutableStateFlow<Boolean>(false)
+    val isOnGuard: StateFlow<Boolean> = _isOnGuard.asStateFlow()
+    fun setIsOnGuard(value: Boolean){_isOnGuard.value = value}
+
+    var _mqttStatus = MutableStateFlow<String>("MQTT Status")
+    val mqttStatus: StateFlow<String> = _mqttStatus.asStateFlow()
 
     private var _camClients = MutableStateFlow(listOf<MQTTCameraClient>())
     val camClients: StateFlow<List<MQTTCameraClient>> = _camClients.asStateFlow()
 
     init {
+
+        //mqttClient.
+
         viewModelScope.launch(Dispatchers.Default){
             while (!mqttClient.isConnected) {
                 delay(100)

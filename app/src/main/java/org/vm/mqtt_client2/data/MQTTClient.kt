@@ -12,7 +12,8 @@ import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttMessage
 
-class MQTTClient (applicationContext: Context
+class MQTTClient (applicationContext: Context,
+    appViewModel: AppViewModel
 
 
 //                  private val topicsList: List<Pair<String, Int>>,
@@ -42,6 +43,7 @@ class MQTTClient (applicationContext: Context
 
                 } else {
                     addToHistory("Connected: $serverURI")
+                    appViewModel._mqttStatus.value="Connected";
                 }
             }
 

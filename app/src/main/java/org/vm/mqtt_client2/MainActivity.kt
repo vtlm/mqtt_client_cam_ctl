@@ -8,8 +8,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.material3.Checkbox
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -50,7 +52,7 @@ class MainActivity : ComponentActivity() {
             Mqtt_client2Theme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
-                        ShowCamClients(appViewModel.camClients.collectAsState().value)
+                        MainScreen()
                     }
                 }
             }
@@ -68,6 +70,17 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
+    @Composable
+    fun MainScreen(){
+        Column {
+            Text(appViewModel.mqttStatus.collectAsState().value)
+            Checkbox(checked = appViewModel.isOnGuard.collectAsState().value,
+                onCheckedChange = {appViewModel.setIsOnGuard(it)} )
+            ShowCamClients(appViewModel.camClients.collectAsState().value)
+        }
+
+    }
+
 
 }
 
@@ -77,11 +90,19 @@ fun ShowCamClients(camClients: List<MQTTCameraClient>){
         camClients.forEach {
 //            val bm = it.jpgImage.value
             item (key = System.identityHashCode(it)){
-                BitmapImage(it)
+                CameraScreen(it)
             }
         }
     }
 
+}
+
+@Composable
+fun CameraScreen(mqttCameraClient: MQTTCameraClient){
+    Box{
+        BitmapImage(mqttCameraClient)
+        Text(mqttCameraClient.name)
+    }
 }
 
 @Composable
