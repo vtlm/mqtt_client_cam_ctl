@@ -1,6 +1,9 @@
 package org.vm.mqtt_client2
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.os.Message
 import android.util.Log
@@ -46,6 +49,20 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         Timber.d("onCreate")
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Create the NotificationChannel.
+            val name = getString(R.string.channel_name)
+            val descriptionText = getString(R.string.channel_description)
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val CHANNEL_ID = "SECURITY_NOTIFY"
+            val mChannel = NotificationChannel(CHANNEL_ID, name, importance)
+            mChannel.description = descriptionText
+            // Register the channel with the system. You can't change the importance
+            // or other notification behaviors after this.
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(mChannel)
+        }
 
         enableEdgeToEdge()
         setContent {

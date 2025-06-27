@@ -1,7 +1,12 @@
 package org.vm.mqtt_client2.data
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.util.Log
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import info.mqtt.android.service.MqttAndroidClient
 import info.mqtt.android.service.QoS
 import org.eclipse.paho.client.mqttv3.DisconnectedBufferOptions
@@ -11,6 +16,9 @@ import org.eclipse.paho.client.mqttv3.IMqttToken
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttMessage
+import org.vm.mqtt_client2.R
+
+val NOTIFICATION_ID = 0x335577;
 
 class MQTTClient (applicationContext: Context,
     appViewModel: AppViewModel
@@ -44,6 +52,34 @@ class MQTTClient (applicationContext: Context,
                 } else {
                     addToHistory("Connected: $serverURI")
                     appViewModel._mqttStatus.value="Connected";
+
+                    var builder = NotificationCompat.Builder(applicationContext, applicationContext.getString(R.string.channel_id))
+                        .setSmallIcon(R.drawable.baseline_warning_24)
+                        .setContentTitle("My notification")
+                        .setContentText("Much longer text that cannot fit one line...")
+                        .setStyle(NotificationCompat.BigTextStyle()
+                            .bigText("Much longer text that cannot fit one line..."))
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+
+                    with(NotificationManagerCompat.from(applicationContext)) {
+                        if (ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            // TODO: Consider calling
+                            // ActivityCompat#requestPermissions
+                            // here to request the missing permissions, and then overriding
+                            // public fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
+                            //                                        grantResults: IntArray)
+                            // to handle the case where the user grants the permission. See the documentation
+                            // for ActivityCompat#requestPermissions for more details.
+
+                            return@with
+                        }
+                        // notificationId is a unique int for each notification that you must define.
+                        notify(NOTIFICATION_ID, builder.build())
+                    }
                 }
             }
 
