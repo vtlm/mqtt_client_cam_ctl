@@ -23,6 +23,8 @@ class AppViewModel  @Inject constructor(
 //        TopicHandler(mutableMapOf((listOf(Pair("CamFrame",1)) to ::receivedMessageHandler ))))
 //    var mqttCamClient: MQTTCameraClient? = null
 
+    private val _progressTitle = MutableStateFlow("")
+    val progressTitle: StateFlow<String> = _progressTitle.asStateFlow()
 
 
     var _isOnGuard = MutableStateFlow<Boolean>(false)

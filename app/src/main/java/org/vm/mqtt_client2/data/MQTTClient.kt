@@ -20,7 +20,7 @@ import org.vm.mqtt_client2.R
 
 val NOTIFICATION_ID = 0x335577;
 
-class MQTTClient (applicationContext: Context,
+class MQTTClient (val applicationContext: Context,
     appViewModel: AppViewModel
 
 
@@ -59,7 +59,7 @@ class MQTTClient (applicationContext: Context,
                         .setContentText("Much longer text that cannot fit one line...")
                         .setStyle(NotificationCompat.BigTextStyle()
                             .bigText("Much longer text that cannot fit one line..."))
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
 
                     with(NotificationManagerCompat.from(applicationContext)) {
                         if (ActivityCompat.checkSelfPermission(
