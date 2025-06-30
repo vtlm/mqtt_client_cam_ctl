@@ -58,6 +58,8 @@ import org.vm.mqtt_client2.ui.theme.Mqtt_client2Theme
 import timber.log.Timber
 import kotlin.system.exitProcess
 
+val CHANNEL_ID = "SECURITY_NOTIFY"
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 

@@ -7,8 +7,11 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.viewModelScope
 import info.mqtt.android.service.MqttAndroidClient
 import info.mqtt.android.service.QoS
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.DisconnectedBufferOptions
 import org.eclipse.paho.client.mqttv3.IMqttActionListener
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
@@ -16,9 +19,42 @@ import org.eclipse.paho.client.mqttv3.IMqttToken
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttMessage
+import org.vm.mqtt_client2.CHANNEL_ID
 import org.vm.mqtt_client2.R
 
 val NOTIFICATION_ID = 0x335577;
+
+fun notify(applicationContext: Context, title: String, text: String){
+    val builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+        .setSmallIcon(R.drawable.baseline_warning_24)
+        .setContentTitle(title)
+        .setContentText(text)
+//                        .setStyle(NotificationCompat.BigTextStyle()
+//                            .bigText("Much longer text that cannot fit one line..."))
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+
+    with(NotificationManagerCompat.from(applicationContext)) {
+        if (ActivityCompat.checkSelfPermission(
+                applicationContext,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            // ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            // public fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
+            //                                        grantResults: IntArray)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+
+            return@with
+        }
+        // notificationId is a unique int for each notification that you must define.
+        notify(NOTIFICATION_ID, builder.build())
+    }
+
+}
+
 
 class MQTTClient (val applicationContext: Context,
     appViewModel: AppViewModel
@@ -30,15 +66,25 @@ class MQTTClient (val applicationContext: Context,
 
 
     var isConnected = false
+    var reConnectCnt = 0
+
 
     private var mqttAndroidClient: MqttAndroidClient = MqttAndroidClient(applicationContext, SERVER_URI, clientId)
     val topicHandler = TopicHandler()
 
-    init{
+    init {
         mqttAndroidClient.setCallback(object : MqttCallbackExtended {
+
             override fun connectComplete(reconnect: Boolean, serverURI: String) {
                 if (reconnect) {
+                    reConnectCnt += 1
                     addToHistory("Reconnected: $serverURI")
+                    appViewModel._mqttStatus.value = "Connected ($reConnectCnt)";
+
+                    notify(applicationContext,
+                        "MQTT Cam",
+                        "MQTT reconnected $reConnectCnt times"
+                        )
                     // Because Clean Session is true, we need to re-subscribe
 
 //                    topicsList.forEach {
@@ -51,45 +97,19 @@ class MQTTClient (val applicationContext: Context,
 
                 } else {
                     addToHistory("Connected: $serverURI")
-                    appViewModel._mqttStatus.value="Connected";
-
-                    var builder = NotificationCompat.Builder(applicationContext, applicationContext.getString(R.string.channel_id))
-                        .setSmallIcon(R.drawable.baseline_warning_24)
-                        .setContentTitle("My notification")
-                        .setContentText("Much longer text that cannot fit one line...")
-                        .setStyle(NotificationCompat.BigTextStyle()
-                            .bigText("Much longer text that cannot fit one line..."))
-                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-
-                    with(NotificationManagerCompat.from(applicationContext)) {
-                        if (ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.POST_NOTIFICATIONS
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            // TODO: Consider calling
-                            // ActivityCompat#requestPermissions
-                            // here to request the missing permissions, and then overriding
-                            // public fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
-                            //                                        grantResults: IntArray)
-                            // to handle the case where the user grants the permission. See the documentation
-                            // for ActivityCompat#requestPermissions for more details.
-
-                            return@with
-                        }
-                        // notificationId is a unique int for each notification that you must define.
-                        notify(NOTIFICATION_ID, builder.build())
-                    }
+                    appViewModel._mqttStatus.value = "Connected";
+                    notify(applicationContext,"MQTT Cam","MQTT connected")
                 }
             }
 
             override fun connectionLost(cause: Throwable?) {
                 addToHistory("The Connection was lost.")
+
+                appViewModel._mqttStatus.value = "Disconnected";
+                notify(applicationContext,"MQTT Cam","MQTT Diconnected")
             }
 
             override fun messageArrived(topic: String, message: MqttMessage) {
-
-
                 topicHandler.handle(topic, message)
 //                receivedMessageHandler(topic, message)
 
@@ -107,15 +127,22 @@ class MQTTClient (val applicationContext: Context,
 
         addToHistory("Connecting: $SERVER_URI")
 
-        mqttAndroidClient.connect(mqttConnectOptions, null, object : IMqttActionListener {
-            override fun onSuccess(asyncActionToken: IMqttToken) {
-                val disconnectedBufferOptions = DisconnectedBufferOptions().apply {
-                    isBufferEnabled = true
-                    bufferSize = 100
-                    isPersistBuffer = false
-                    isDeleteOldestMessages = false
-                }
-                mqttAndroidClient.setBufferOpts(disconnectedBufferOptions)
+//        appViewModel._mqttStatus.value = "Try to Connect"
+
+        appViewModel.viewModelScope.launch {
+
+            var connectAttemptCnt = 0
+
+            while (!isConnected) {
+                mqttAndroidClient.connect(mqttConnectOptions, null, object : IMqttActionListener {
+                    override fun onSuccess(asyncActionToken: IMqttToken) {
+                        val disconnectedBufferOptions = DisconnectedBufferOptions().apply {
+                            isBufferEnabled = true
+                            bufferSize = 100
+                            isPersistBuffer = false
+                            isDeleteOldestMessages = false
+                        }
+                        mqttAndroidClient.setBufferOpts(disconnectedBufferOptions)
 
 //                topicHandler.subscribe(mqttAndroidClient)
 
@@ -123,13 +150,21 @@ class MQTTClient (val applicationContext: Context,
 //                    val (topic, qos) = it
 //                    subscribeToTopic(topic, qos)
 //                }
-                isConnected = true
+                        isConnected = true
+                    }
+
+                    override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                        addToHistory("Failed to connect: $SERVER_URI")
+
+                        connectAttemptCnt += 1
+                        appViewModel._mqttStatus.value = "MQTT Broker Connect Attempts: $connectAttemptCnt"
+                    }
+                })
+
+                delay(4000)
             }
 
-            override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                addToHistory("Failed to connect: $SERVER_URI")
-            }
-        })
+    }
 
     }//init
 
