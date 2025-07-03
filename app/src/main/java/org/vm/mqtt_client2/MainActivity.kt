@@ -98,6 +98,7 @@ class MainActivity : ComponentActivity() {
 
         checkPermissions()
 
+        lifecycle.addObserver(appViewModel)
 
         enableEdgeToEdge()
         setContent {

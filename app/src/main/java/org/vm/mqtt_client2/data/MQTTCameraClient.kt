@@ -33,10 +33,12 @@ class MQTTCameraClient (
     val jpgImage: StateFlow<Bitmap?> = _jpgImage.asStateFlow()
 
     var requestFrame = false
+    var timeOutCnt = 0
+    var timeOutMaxCnt = 5
 
     init{
         mqttClient.subscribe(listOf(Pair("CamFrame",1)), ::receivedMessageHandler)
-        mqttClient.publishMessage("CamCtl/$name", "getFrame")
+//        mqttClient.publishMessage("CamCtl/$name", "getFrame")
 
 //        appViewModel.viewModelScope.launch {
 //            while(true){
@@ -51,8 +53,21 @@ class MQTTCameraClient (
     private fun receivedMessageHandler(message: MqttMessage){
         addToHistory("$name: size of bitmap ${message.payload.size}")
         _jpgImage.value = BitmapFactory.decodeByteArray(message.payload, 0, message.payload.size )
-        mqttClient.publishMessage("CamCtl/152","getFrame")
+//        mqttClient.publishMessage("CamCtl/152","getFrame")
 //        requestFrame = true
+        timeOutCnt = 0
+    }
+
+    fun sendRequest(){
+        mqttClient.publishMessage("CamCtl/$name","getFrame")
+    }
+
+    fun checkTimeOut(): Boolean{
+        timeOutCnt+=1
+        if(timeOutCnt >= timeOutMaxCnt){
+            return true
+        }
+        return false
     }
 
 }

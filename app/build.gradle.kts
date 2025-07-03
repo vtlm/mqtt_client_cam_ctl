@@ -52,6 +52,7 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.55")
 //    implementation(libs.androidx.constraintlayout.compose)
     kapt("com.google.dagger:hilt-android-compiler:2.55")
+    implementation(libs.androidx.work.runtime.ktx)
 
     implementation (libs.timber)
 
