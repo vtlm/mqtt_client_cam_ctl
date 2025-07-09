@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -38,6 +39,7 @@ class MQTTCameraClient (
 
     init{
         mqttClient.subscribe(listOf(Pair("CamFrame",1)), ::receivedMessageHandler)
+        mqttClient.subscribe(listOf(Pair("HeartBeat",1)), ::heartBeatHandler)
 //        mqttClient.publishMessage("CamCtl/$name", "getFrame")
 
 //        appViewModel.viewModelScope.launch {
@@ -48,6 +50,26 @@ class MQTTCameraClient (
 //                }
 //            }
 //        }
+    }
+
+    fun littleEndianBytesToInt(bytes: ByteArray): Int {
+        var result = 0
+        for (i in bytes.indices) {
+            result = result or (bytes[i].toInt() and 0xFF shl (8 * i))
+        }
+        return result
+    }
+
+    fun bigEndianBytesToInt(bytes: ByteArray): Int {
+        var result = 0
+        for (i in bytes.indices) {
+            result = result or (bytes[i].toInt() and 0xFF shl (8 * (bytes.size - 1 - i)))
+        }
+        return result
+    }
+
+    private fun heartBeatHandler(message: MqttMessage){
+        Log.d("DBG_HB","Heartbeat cnt ${littleEndianBytesToInt(message.payload)}, ${bigEndianBytesToInt(message.payload)}, size: ${message.payload.size}")
     }
 
     private fun receivedMessageHandler(message: MqttMessage){
