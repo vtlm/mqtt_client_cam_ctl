@@ -189,14 +189,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-//    fun triggerRestart(context: Activity) {
-//        val intent = Intent(context, MainActivity::class.java)
-//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//        context.startActivity(intent)
-//        context.finish()
-//        Runtime.getRuntime().exit(0)
-//    }
-
     @RequiresExtension(extension = Build.VERSION_CODES.R, version = 1)
     @RequiresApi(Build.VERSION_CODES.Q)
     @Composable
@@ -310,7 +302,6 @@ class MainActivity : ComponentActivity() {
 fun ShowCamClients(camClients: List<MQTTCameraClient>){
     LazyColumn {
         camClients.forEach {
-//            val bm = it.jpgImage.value
             item (key = System.identityHashCode(it)){
                 CameraScreen(it)
             }
@@ -329,7 +320,6 @@ fun CameraScreen(mqttCameraClient: MQTTCameraClient){
 
 @Composable
 fun BitmapImage(mqttCameraClient: MQTTCameraClient) {
-//  if(mqttCameraClient != null) {
     val bitmap = mqttCameraClient.jpgImage.collectAsState().value
 
     if(bitmap != null) {
@@ -339,25 +329,5 @@ fun BitmapImage(mqttCameraClient: MQTTCameraClient) {
         )
     }else{
         Text("No bitmap")
-    }
-//                        }else{
-//                            Text("Initializing...")
-//                        }
-}
-
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Mqtt_client2Theme {
-        Greeting("Android")
     }
 }

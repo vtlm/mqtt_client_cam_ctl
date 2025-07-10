@@ -53,7 +53,10 @@ class AppViewModel  @Inject constructor(
 
     var _isOnGuard = MutableStateFlow<Boolean>(false)
     val isOnGuard: StateFlow<Boolean> = _isOnGuard.asStateFlow()
-    fun setIsOnGuard(value: Boolean){_isOnGuard.value = value}
+    fun setIsOnGuard(value: Boolean){
+        _isOnGuard.value = value
+        mqttClient.publishMessage("SetOnGuard", isOnGuard.value.toString())
+    }
 
     var _mqttStatus = MutableStateFlow<String>("MQTT Status")
     val mqttStatus: StateFlow<String> = _mqttStatus.asStateFlow()
@@ -76,7 +79,7 @@ class AppViewModel  @Inject constructor(
             _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel,"152", mqttClient))
         }
 
-        _camClients.value.forEach{it.sendRequest()}
+//        _camClients.value.forEach{it.sendRequest()}
 
 //        timer.schedule(syncTask,500,100)
     }
@@ -118,7 +121,7 @@ class AppViewModel  @Inject constructor(
         _camClients.value.forEach {
             if(it.checkTimeOut()){
                 Log.d("L_TMR","timeout ${it.name}")
-                it.sendRequest()
+//                it.sendRequest()
             }
         }
     }
