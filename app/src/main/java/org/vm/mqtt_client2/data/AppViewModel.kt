@@ -79,7 +79,7 @@ class AppViewModel  @Inject constructor(
             _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel,"152", mqttClient))
         }
 
-//        _camClients.value.forEach{it.sendRequest()}
+        _camClients.value.forEach{it.sendRequest()}
 
 //        timer.schedule(syncTask,500,100)
     }
@@ -121,7 +121,7 @@ class AppViewModel  @Inject constructor(
         _camClients.value.forEach {
             if(it.checkTimeOut()){
                 Log.d("L_TMR","timeout ${it.name}")
-//                it.sendRequest()
+                it.sendRequest()
             }
         }
     }
