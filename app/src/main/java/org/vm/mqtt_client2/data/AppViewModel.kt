@@ -6,11 +6,6 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequest
-import androidx.work.WorkRequest
-import androidx.work.Worker
-import androidx.work.WorkerParameters
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -64,6 +59,16 @@ class AppViewModel  @Inject constructor(
     private var _camClients = MutableStateFlow(listOf<MQTTCameraClient>())
     val camClients: StateFlow<List<MQTTCameraClient>> = _camClients.asStateFlow()
 
+//    private var _strList = MutableStateFlow(listOf<String>())
+//    val strList: StateFlow<List<String>> = _strList.asStateFlow()
+//
+//    val _jpgImage = MutableStateFlow<Bitmap?>(null)
+//    val jpgImage: StateFlow<Bitmap?> = _jpgImage.asStateFlow()
+//
+//    val _jpgImage2 = MutableStateFlow<Bitmap?>(null)
+//    val jpgImage2: StateFlow<Bitmap?> = _jpgImage2.asStateFlow()
+
+
     init {
 
         //mqttClient.
@@ -74,9 +79,9 @@ class AppViewModel  @Inject constructor(
             while (!mqttClient.isConnected) {
                 delay(100)
             }
-            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel,"152", mqttClient))
-            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel,"152", mqttClient))
-            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel,"152", mqttClient))
+//            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "152", mqttClient))
+            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "153", mqttClient))
+            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "154", mqttClient))
         }
 
         _camClients.value.forEach{it.sendRequest()}
@@ -96,13 +101,13 @@ class AppViewModel  @Inject constructor(
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
-        timer = Timer()
-        timer.schedule(SyncTask(this),500,100)
+//        timer = Timer()
+//        timer.schedule(SyncTask(this),500,500)
     }
 
     override fun onPause(owner: LifecycleOwner) {
         super.onPause(owner)
-        timer.cancel()
+//        timer.cancel()
     }
 
     override fun onStop(owner: LifecycleOwner) {
@@ -118,12 +123,20 @@ class AppViewModel  @Inject constructor(
 
     fun run(){
         Log.d("L_TMR","execute task in viewModel")
+
+        var tmpL=listOf<MQTTCameraClient>()
+
         _camClients.value.forEach {
             if(it.checkTimeOut()){
-                Log.d("L_TMR","timeout ${it.name}")
+                Log.d("L_TMR","timeout ${it.deviceName}:${it.addressId}")
                 it.sendRequest()
             }
+//            tmpL = tmpL.plus(it)
         }
+
+        _camClients.value = tmpL
+        Log.d("L_TMR",_camClients.value.toString())
+//        _strList.value += "Fuck You!"
     }
 
     }

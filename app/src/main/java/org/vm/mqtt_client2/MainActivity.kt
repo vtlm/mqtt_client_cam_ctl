@@ -1,16 +1,12 @@
 package org.vm.mqtt_client2
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Message
 import android.provider.Settings
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -37,21 +33,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
-import info.mqtt.android.service.MqttAndroidClient
-import info.mqtt.android.service.QoS
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.eclipse.paho.client.mqttv3.DisconnectedBufferOptions
-import org.eclipse.paho.client.mqttv3.IMqttActionListener
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
-import org.eclipse.paho.client.mqttv3.IMqttToken
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions
-import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.vm.mqtt_client2.data.AppViewModel
 import org.vm.mqtt_client2.data.MQTTCameraClient
 import org.vm.mqtt_client2.ui.theme.Mqtt_client2Theme
@@ -201,6 +187,7 @@ class MainActivity : ComponentActivity() {
                 true -> {
                     //Nav()
                     MainScreen()
+//                    ShowClientText(appViewModel.strList.collectAsState().value)
                 }
             }
         }
@@ -299,35 +286,51 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+fun ShowClientText(strList:List<String>){
+    LazyColumn {
+        strList.forEachIndexed { ind, it ->
+            item (key = ind, (it)){
+                Text("$ind, $it")
+            }
+        }
+    }
+}
+
+@Composable
 fun ShowCamClients(camClients: List<MQTTCameraClient>){
     LazyColumn {
-        camClients.forEach {
-            item (key = System.identityHashCode(it)){
+        camClients.forEachIndexed { ind, it ->
+            item (key = ind, (it)){
                 CameraScreen(it)
             }
         }
     }
-
 }
 
 @Composable
 fun CameraScreen(mqttCameraClient: MQTTCameraClient){
     Box{
-        BitmapImage(mqttCameraClient)
-        Text(mqttCameraClient.name)
+
+        BitmapImage(mqttCameraClient.jpgImage.collectAsState().value)
+        Column {
+            Text("${mqttCameraClient.deviceName}:${mqttCameraClient.addressId}")
+            Row (verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = mqttCameraClient._isStremingJpg.collectAsState().value,
+                    onCheckedChange = { mqttCameraClient.setStreamingJpg(it) })
+                Text("Streaming Jpg")
+            }
+        }
     }
 }
 
 @Composable
-fun BitmapImage(mqttCameraClient: MQTTCameraClient) {
-    val bitmap = mqttCameraClient.jpgImage.collectAsState().value
+fun BitmapImage(bitmap: Bitmap?) {
 
     if(bitmap != null) {
         Image(
             bitmap = bitmap.asImageBitmap(),
             contentDescription = "some useful description",
         )
-    }else{
-        Text("No bitmap")
     }
 }

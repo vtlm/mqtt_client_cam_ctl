@@ -1,34 +1,40 @@
 package org.vm.mqtt_client2.data
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
+import com.google.flatbuffers.FlatBufferBuilder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.MqttMessage
-import org.vm.mqtt_client2.R
+import org.vm.mqtt_client2.data.flatbuffer.Buffer
+import org.vm.mqtt_client2.data.flatbuffer.StatusMessage
+import java.nio.ByteBuffer
+import kotlin.experimental.and
+import kotlin.experimental.inv
+import kotlin.experimental.or
 
+const val SC_STREAM_JPG:Short = 0x01
+//private val MQTTCameraClient.SC_STREAMING_JPG: Short
+//    get() = 0x01
 class MQTTCameraClient (
     val appViewModel: AppViewModel,
-    val name: String,
+    val deviceName: String,
+    val addressId: String,
     val mqttClient: MQTTClient
 //    context: Context,
 //    private val clientuser: String
 ) {
 
+
+    var config:Short=0;
 //    @Inject
 //    lateinit var userPreferencesRepository: UserPreferencesRepository
+    var _isStremingJpg = MutableStateFlow<Boolean>(false)
+    val isStreamingJpg: StateFlow<Boolean> = _isStremingJpg.asStateFlow()
+    var _isOnGuard = MutableStateFlow<Boolean>(false)
+    val isOnGuard: StateFlow<Boolean> = _isOnGuard.asStateFlow()
 
     val _jpgImage = MutableStateFlow<Bitmap?>(null)
     val jpgImage: StateFlow<Bitmap?> = _jpgImage.asStateFlow()
@@ -37,9 +43,11 @@ class MQTTCameraClient (
     var timeOutCnt = 0
     var timeOutMaxCnt = 5
 
+    var cnt: Short = 0
+
     init{
-        mqttClient.subscribe(listOf(Pair("CamFrame",1)), ::receivedMessageHandler)
-        mqttClient.subscribe(listOf(Pair("HeartBeat",1)), ::heartBeatHandler)
+        mqttClient.subscribe(listOf(Pair("$deviceName/$addressId/CamFrame",1)), ::receivedImageHandler)
+        mqttClient.subscribe(listOf(Pair("$deviceName/$addressId/HeartBeat",1)), ::heartBeatHandler)
 //        mqttClient.publishMessage("CamCtl/$name", "getFrame")
 
 //        appViewModel.viewModelScope.launch {
@@ -52,6 +60,16 @@ class MQTTCameraClient (
 //        }
     }
 
+    fun setStreamingJpg(value: Boolean){
+        _isStremingJpg.value = value
+        config = if(value){
+            config or SC_STREAM_JPG
+        }else{
+            config and SC_STREAM_JPG.inv()
+        }
+        sendConfig()
+//        mqttClient.publishMessage("SetStreamingJpg", isOnGuard.value.toString())
+    }
     fun littleEndianBytesToInt(bytes: ByteArray): Int {
         var result = 0
         for (i in bytes.indices) {
@@ -69,11 +87,13 @@ class MQTTCameraClient (
     }
 
     private fun heartBeatHandler(message: MqttMessage){
-        Log.d("DBG_HB","Heartbeat cnt ${littleEndianBytesToInt(message.payload)}, ${bigEndianBytesToInt(message.payload)}, size: ${message.payload.size}")
+
+        val statusMessage: StatusMessage = StatusMessage.getRootAsStatusMessage(ByteBuffer.wrap(message.payload))
+        Log.d("DBG_HB","Heartbeat cnt ${statusMessage.counter}, status: ${statusMessage.status}")
     }
 
-    private fun receivedMessageHandler(message: MqttMessage){
-        addToHistory("$name: size of bitmap ${message.payload.size}")
+    private fun receivedImageHandler(message: MqttMessage){
+        addToHistory("$deviceName:$addressId size of bitmap ${message.payload.size}")
         _jpgImage.value = BitmapFactory.decodeByteArray(message.payload, 0, message.payload.size )
 //        mqttClient.publishMessage("CamCtl/152","getFrame")
 //        requestFrame = true
@@ -81,7 +101,25 @@ class MQTTCameraClient (
     }
 
     fun sendRequest(){
-        mqttClient.publishMessage("CamCtl/$name","getFrame")
+        val builder = FlatBufferBuilder(1024)
+        Buffer.startBuffer(builder)
+        Buffer.addParam1(builder, cnt++)
+        val buffrOut= Buffer.endBuffer(builder)
+        builder.finish(buffrOut)
+        val bindta = ByteBuffer.wrap(builder.sizedByteArray())
+
+        mqttClient.publishMessage("$deviceName/$addressId/CamCtl", builder.sizedByteArray())
+    }
+
+    fun sendConfig(){
+        val builder = FlatBufferBuilder(1024)
+        Buffer.startBuffer(builder)
+        Buffer.addParam1(builder, config)
+        val buffrOut= Buffer.endBuffer(builder)
+        builder.finish(buffrOut)
+        val bindta = ByteBuffer.wrap(builder.sizedByteArray())
+
+        mqttClient.publishMessage("$deviceName/$addressId/CamCtl", builder.sizedByteArray())
     }
 
     fun checkTimeOut(): Boolean{
@@ -91,6 +129,11 @@ class MQTTCameraClient (
         }
         return false
     }
+
+//    companion object{
+//        const val SC_STREAM_JPG : Short = 0x01
+//
+//    }
 
 }
 
