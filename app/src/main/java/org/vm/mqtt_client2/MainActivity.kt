@@ -1,5 +1,7 @@
 package org.vm.mqtt_client2
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -68,19 +70,19 @@ class MainActivity : ComponentActivity() {
 
         Timber.d("onCreate")
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            // Create the NotificationChannel.
-//            val name = getString(R.string.channel_name)
-//            val descriptionText = getString(R.string.channel_description)
-//            val importance = NotificationManager.IMPORTANCE_DEFAULT
-//            val CHANNEL_ID = "SECURITY_NOTIFY"
-//            val mChannel = NotificationChannel(CHANNEL_ID, name, importance)
-//            mChannel.description = descriptionText
-//            // Register the channel with the system. You can't change the importance
-//            // or other notification behaviors after this.
-//            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-//            notificationManager.createNotificationChannel(mChannel)
-//        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Create the NotificationChannel.
+            val name = getString(R.string.channel_name)
+            val descriptionText = getString(R.string.channel_description)
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val CHANNEL_ID = "SECURITY_NOTIFY"
+            val mChannel = NotificationChannel(CHANNEL_ID, name, importance)
+            mChannel.description = descriptionText
+            // Register the channel with the system. You can't change the importance
+            // or other notification behaviors after this.
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(mChannel)
+        }
 
         checkPermissions()
 
@@ -314,6 +316,12 @@ fun CameraScreen(mqttCameraClient: MQTTCameraClient){
         BitmapImage(mqttCameraClient.jpgImage.collectAsState().value)
         Column {
             Text("${mqttCameraClient.deviceName}:${mqttCameraClient.addressId}")
+            Row (verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = mqttCameraClient._isOnGuard.collectAsState().value,
+                    onCheckedChange = { mqttCameraClient.setOnGuard(it) })
+                Text("On Guard")
+            }
             Row (verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = mqttCameraClient._isStremingJpg.collectAsState().value,

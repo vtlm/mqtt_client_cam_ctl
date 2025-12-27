@@ -59,6 +59,8 @@ class AppViewModel  @Inject constructor(
     private var _camClients = MutableStateFlow(listOf<MQTTCameraClient>())
     val camClients: StateFlow<List<MQTTCameraClient>> = _camClients.asStateFlow()
 
+
+    var appState=0;
 //    private var _strList = MutableStateFlow(listOf<String>())
 //    val strList: StateFlow<List<String>> = _strList.asStateFlow()
 //
@@ -79,12 +81,12 @@ class AppViewModel  @Inject constructor(
             while (!mqttClient.isConnected) {
                 delay(100)
             }
-//            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "152", mqttClient))
+            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "152", mqttClient))
             _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "153", mqttClient))
             _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "154", mqttClient))
         }
 
-        _camClients.value.forEach{it.sendRequest()}
+//        _camClients.value.forEach{it.sendRequest()}
 
 //        timer.schedule(syncTask,500,100)
     }
@@ -103,11 +105,13 @@ class AppViewModel  @Inject constructor(
         super.onResume(owner)
 //        timer = Timer()
 //        timer.schedule(SyncTask(this),500,500)
+        appState=1
     }
 
     override fun onPause(owner: LifecycleOwner) {
         super.onPause(owner)
 //        timer.cancel()
+        appState=0
     }
 
     override fun onStop(owner: LifecycleOwner) {

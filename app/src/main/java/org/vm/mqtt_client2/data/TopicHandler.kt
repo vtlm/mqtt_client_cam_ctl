@@ -4,6 +4,7 @@ import info.mqtt.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.IMqttActionListener
 import org.eclipse.paho.client.mqttv3.IMqttToken
 import org.eclipse.paho.client.mqttv3.MqttMessage
+import timber.log.Timber
 
 class TopicHandler() {
 
@@ -25,12 +26,12 @@ class TopicHandler() {
             val (topic, qos) = it
             mqttAndroidClient.subscribe(topic, qos, null, object : IMqttActionListener {
                 override fun onSuccess(asyncActionToken: IMqttToken) {
-                    addToHistory("Subscribed! $topic")
+                    Timber.tag("MQTT_D").d("Subscribed! $topic")
 //                publishMessage("CamCtl", "getFrame")
                 }
 
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                    addToHistory("Failed to subscribe $exception")
+                    Timber.tag("MQTT_D").d("Failed to subscribe $exception")
                 }
             })
         }

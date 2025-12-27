@@ -3,7 +3,6 @@ package org.vm.mqtt_client2.data
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -20,6 +19,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.vm.mqtt_client2.CHANNEL_ID
 import org.vm.mqtt_client2.R
+import timber.log.Timber
+
 
 const val NOTIFICATION_ID = 0x335577;
 
@@ -72,12 +73,13 @@ class MQTTClient (val applicationContext: Context,
     val topicHandler = TopicHandler()
 
     init {
+
         mqttAndroidClient.setCallback(object : MqttCallbackExtended {
 
             override fun connectComplete(reconnect: Boolean, serverURI: String) {
                 if (reconnect) {
                     reConnectCnt += 1
-                    addToHistory("Reconnected: $serverURI")
+                    Timber.tag("MQTT_D").d("Reconnected: $serverURI")
                     appViewModel._mqttStatus.value = "Connected ($reConnectCnt)";
 
                     notify(applicationContext,
@@ -95,14 +97,14 @@ class MQTTClient (val applicationContext: Context,
                     isConnected = true
 
                 } else {
-                    addToHistory("Connected: $serverURI")
+                    Timber.tag("MQTT_D").d("Connected: $serverURI")
                     appViewModel._mqttStatus.value = "Connected";
                     notify(applicationContext,"MQTT Cam","MQTT connected")
                 }
             }
 
             override fun connectionLost(cause: Throwable?) {
-                addToHistory("The Connection was lost.")
+                Timber.tag("MQTT_D").d("The Connection was lost.")
 
                 appViewModel._mqttStatus.value = "Disconnected";
                 notify(applicationContext,"MQTT Cam","MQTT Diconnected")
@@ -114,7 +116,7 @@ class MQTTClient (val applicationContext: Context,
 
 //                val data = String(message.payload, charset("UTF-8"))
 //                Log.d("MQTT_D", "arrived: $topic $data")
-//                addToHistory("Incoming message: " + String(message.payload).length)
+//                Timber.tag("MQTT_D").d("Incoming message: " + String(message.payload).length)
             }
 
             override fun deliveryComplete(token: IMqttDeliveryToken) = Unit
@@ -124,7 +126,7 @@ class MQTTClient (val applicationContext: Context,
         mqttConnectOptions.isAutomaticReconnect = true
         mqttConnectOptions.isCleanSession = false
 
-        addToHistory("Connecting: $MQTT_BROKER_SERVER_URI")
+        Timber.tag("MQTT_D").d("Connecting: $MQTT_BROKER_SERVER_URI")
 
 //        appViewModel._mqttStatus.value = "Try to Connect"
 
@@ -153,7 +155,7 @@ class MQTTClient (val applicationContext: Context,
                     }
 
                     override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                        addToHistory("Failed to connect: $MQTT_BROKER_SERVER_URI")
+                        Timber.tag("MQTT_D").d("Failed to connect: $MQTT_BROKER_SERVER_URI")
 
                         connectAttemptCnt += 1
 //                        appViewModel._mqttStatus.value = "MQTT Broker Connect Attempts: $connectAttemptCnt"
@@ -176,19 +178,19 @@ class MQTTClient (val applicationContext: Context,
 //    fun subscribeToTopic(topic: String, qos: Int) {
 //        mqttAndroidClient.subscribe(topic, qos, null, object : IMqttActionListener {
 //            override fun onSuccess(asyncActionToken: IMqttToken) {
-//                addToHistory("Subscribed! $SUBSCRIPTION_TOPIC")
+//                Timber.tag("MQTT_D").d("Subscribed! $SUBSCRIPTION_TOPIC")
 ////                publishMessage("CamCtl", "getFrame")
 //            }
 //
 //            override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-//                addToHistory("Failed to subscribe $exception")
+//                Timber.tag("MQTT_D").d("Failed to subscribe $exception")
 //            }
 //        })
 //
 //        // THIS DOES NOT WORK!
 ////        mqttAndroidClient.subscribe(SUBSCRIPTION_TOPIC, QoS.AtMostOnce.value) { topic, message ->
 ////            Timber.d("Message arrived $topic : ${String(message.payload)}")
-////            addToHistory("Message arrived $message")
+////            Timber.tag("MQTT_D").d("Message arrived $message")
 ////        }
 //    }
 
@@ -200,9 +202,9 @@ class MQTTClient (val applicationContext: Context,
         mqttMessage.qos = 2  //as default
         if (mqttAndroidClient.isConnected) {
             mqttAndroidClient.publish(topic, mqttMessage)
-            addToHistory("Message Published >$message<")
+            Timber.tag("MQTT_D").d("Message Published >$message<")
             if (!mqttAndroidClient.isConnected) {
-                addToHistory(mqttAndroidClient.bufferedMessageCount.toString() + " messages in buffer.")
+                Timber.tag("MQTT_D").d("%s messages in buffer.", mqttAndroidClient.bufferedMessageCount.toString())
             }
         } else {
 //            Snackbar.make(findViewById(android.R.id.content), "Not connected", Snackbar.LENGTH_SHORT).setAction("Action", null).show()
@@ -214,27 +216,19 @@ class MQTTClient (val applicationContext: Context,
         mqttMessage.isRetained = false
         if (mqttAndroidClient.isConnected) {
             mqttAndroidClient.publish(topic, mqttMessage)
-            addToHistory("Message Published >$message<")
+            Timber.tag("MQTT_D").d("Topic Published: $topic")
             if (!mqttAndroidClient.isConnected) {
-                addToHistory(mqttAndroidClient.bufferedMessageCount.toString() + " messages in buffer.")
+                Timber.tag("MQTT_D").d("%s messages in buffer.", mqttAndroidClient.bufferedMessageCount.toString())
             }
         } else {
 //            Snackbar.make(findViewById(android.R.id.content), "Not connected", Snackbar.LENGTH_SHORT).setAction("Action", null).show()
         }
     }
 
-//    private fun addToHistory(str: String){
-////        Timber.tag("MQTT_D").d(str)
-//        Log.d("MQTT_D",str)
-//    }
 
     companion object {
-                private const val MQTT_BROKER_SERVER_URI = "tcp://375333526167.dyndns.mts.by:1883"
-//        private const val SERVER_URI = "tcp://192.168.0.7:1883"
-//        private const val SUBSCRIPTION_TOPIC = "CamFrame"
-//        private const val PUBLISH_TOPIC = "exampleAndroidPublishTopic"
-//        private const val PUBLISH_MESSAGE = "Hello World"
-        private var clientId = "ExampleClientPub_378"//"BasicSample" + System.currentTimeMillis()
+        private const val MQTT_BROKER_SERVER_URI = "tcp://375333526167.dyndns.mts.by:1883"
+        private var clientId = "MobileApp"//"BasicSample" + System.currentTimeMillis()
     }
 
 
@@ -244,7 +238,7 @@ class MQTTClient (val applicationContext: Context,
 }
 
 
-fun addToHistory(str: String){
-//        Timber.tag("MQTT_D").d(str)
-    Log.d("MQTT_D",str)
-}
+//fun Timber.tag("MQTT_D").d(str: String){
+////        Timber.tag("MQTT_D").d(str)
+//    Timber.tag("MQTT_D").d(str)
+//}
