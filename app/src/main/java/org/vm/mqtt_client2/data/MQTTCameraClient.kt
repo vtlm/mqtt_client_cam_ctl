@@ -43,8 +43,10 @@ class MQTTCameraClient (
     var requestFrame = false
     var timeOutCnt = 0
     var timeOutMaxCnt = 5
-
+    var framesCnt = 0
     var cnt: Short = 0
+    val builder = FlatBufferBuilder(128)
+
 
     init{
         mqttClient.subscribe(listOf(Pair("$deviceName/$addressId/CamFrame",1)), ::receivedImageHandler)
@@ -102,37 +104,31 @@ class MQTTCameraClient (
 //        mqttClient.publishMessage("CamCtl/152","getFrame")
 //        requestFrame = true
         timeOutCnt = 0
+        framesCnt++
     }
 
-    @Deprecated("obsolete")
-    fun sendRequest(){
-        val builder = FlatBufferBuilder(1024)
+    fun packBufferParam1(param1: Short){
+        builder.clear()
         Buffer.startBuffer(builder)
-        Buffer.addParam1(builder, cnt++)
+        Buffer.addParam1(builder, param1)
         val bufferOut= Buffer.endBuffer(builder)
         builder.finish(bufferOut)
-        val bindta = ByteBuffer.wrap(builder.sizedByteArray())
-
+    }
+    @Deprecated("obsolete")
+    fun sendRequest(){
+        packBufferParam1(cnt++)
+//        val bindta = ByteBuffer.wrap(builder.sizedByteArray())
         mqttClient.publishMessage("$deviceName/$addressId/CamCtl", builder.sizedByteArray())
     }
 
     fun sendConfig(){
-        val builder = FlatBufferBuilder(1024)
-        Buffer.startBuffer(builder)
-        Buffer.addParam1(builder, config)
-        val bufferOut= Buffer.endBuffer(builder)
-        builder.finish(bufferOut)
-//        val bindta = ByteBuffer.wrap(builder.sizedByteArray())
-
+        packBufferParam1(config)
         mqttClient.publishMessage("$deviceName/$addressId/CamCtl", builder.sizedByteArray())
     }
 
     fun checkTimeOut(): Boolean{
         timeOutCnt+=1
-        if(timeOutCnt >= timeOutMaxCnt){
-            return true
-        }
-        return false
+        return timeOutCnt >= timeOutMaxCnt
     }
 
 

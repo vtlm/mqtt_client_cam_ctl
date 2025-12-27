@@ -328,6 +328,9 @@ fun CameraScreen(mqttCameraClient: MQTTCameraClient){
                     onCheckedChange = { mqttCameraClient.setStreamingJpg(it) })
                 Text("Streaming Jpg")
             }
+            Row (verticalAlignment = Alignment.CenterVertically) {
+                Text("Frame: ${mqttCameraClient.framesCnt}")
+            }
         }
     }
 }
