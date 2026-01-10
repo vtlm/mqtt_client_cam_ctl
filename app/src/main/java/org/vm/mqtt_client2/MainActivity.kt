@@ -315,7 +315,10 @@ fun CameraScreen(mqttCameraClient: MQTTCameraClient){
 
         BitmapImage(mqttCameraClient.jpgImage.collectAsState().value)
         Column {
-            Text("${mqttCameraClient.deviceName}:${mqttCameraClient.addressId}")
+            Row() {
+                Text("${mqttCameraClient.deviceName}:${mqttCameraClient.addressId}")
+                StatusLine(mqttCameraClient.heartBeatCnt.collectAsState().value)
+            }
             Row (verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = mqttCameraClient._isOnGuard.collectAsState().value,
@@ -333,6 +336,11 @@ fun CameraScreen(mqttCameraClient: MQTTCameraClient){
             }
         }
     }
+}
+
+@Composable
+fun StatusLine(heartBeatCnt: Int){
+    Text("HeartBeats: $heartBeatCnt")
 }
 
 @Composable

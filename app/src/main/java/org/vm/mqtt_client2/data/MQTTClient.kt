@@ -194,12 +194,12 @@ class MQTTClient (val applicationContext: Context,
 ////        }
 //    }
 
-    fun publishMessage(topic: String, message: ByteArray) {
+    fun publishMessage(topic: String, message: ByteArray, qos: Int) {
         val mqttMessage = MqttMessage()
         mqttMessage.payload = message
         mqttMessage.isRetained = false  //as default
 //        mqttMessage.id
-        mqttMessage.qos = 2  //as default
+        mqttMessage.qos = qos  //as default
         if (mqttAndroidClient.isConnected) {
             mqttAndroidClient.publish(topic, mqttMessage)
             Timber.tag("MQTT_D").d("Message Published >$message<")

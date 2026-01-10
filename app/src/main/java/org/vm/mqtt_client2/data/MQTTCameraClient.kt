@@ -37,6 +37,9 @@ class MQTTCameraClient (
     var _isOnGuard = MutableStateFlow<Boolean>(false)
     val isOnGuard: StateFlow<Boolean> = _isOnGuard.asStateFlow()
 
+    var _heartBeatCnt = MutableStateFlow<Int>(0)
+    val heartBeatCnt: StateFlow<Int> = _heartBeatCnt.asStateFlow()
+
     val _jpgImage = MutableStateFlow<Bitmap?>(null)
     val jpgImage: StateFlow<Bitmap?> = _jpgImage.asStateFlow()
 
@@ -86,6 +89,7 @@ class MQTTCameraClient (
 
     private fun heartBeatHandler(message: MqttMessage){
         val statusMessage: StatusMessage = StatusMessage.getRootAsStatusMessage(ByteBuffer.wrap(message.payload))
+        _heartBeatCnt.value = statusMessage.counter.toInt()
         Timber.tag("DBG_HB").d("Heartbeat cnt ${statusMessage.counter}, status: ${statusMessage.status}")
 
         if(appViewModel.appState == 0){
@@ -118,12 +122,12 @@ class MQTTCameraClient (
     fun sendRequest(){
         packBufferParam1(cnt++)
 //        val bindta = ByteBuffer.wrap(builder.sizedByteArray())
-        mqttClient.publishMessage("$deviceName/$addressId/CamCtl", builder.sizedByteArray())
+        mqttClient.publishMessage("$deviceName/$addressId/CamCtl", builder.sizedByteArray(), 2)
     }
 
     fun sendConfig(){
         packBufferParam1(config)
-        mqttClient.publishMessage("$deviceName/$addressId/CamCtl", builder.sizedByteArray())
+        mqttClient.publishMessage("$deviceName/$addressId/CamCtl", builder.sizedByteArray(), 2)
     }
 
     fun checkTimeOut(): Boolean{
