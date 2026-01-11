@@ -1,7 +1,6 @@
 package org.vm.mqtt_client2.data
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
@@ -20,12 +19,8 @@ import java.util.TimerTask
 import javax.inject.Inject
 
 
-class SyncTask(val parent: AppViewModel): TimerTask(){
+class SyncTask(private val parent: AppViewModel): TimerTask(){
     override fun run() {
-//        TODO("Not yet implemented")
-        Timber.tag("TMR").d("Running")
-
-    Log.d("L_TMR","execute task")
         parent.run()
     }
 }
@@ -37,7 +32,7 @@ class AppViewModel  @Inject constructor(
 ): ViewModel(), DefaultLifecycleObserver {
 
     private lateinit var timer: Timer
-//    val syncTask = SyncTask(this)
+    val syncTask = SyncTask(this)
     private var mqttClient = MQTTClient(context, this)
 //        TopicHandler(mutableMapOf((listOf(Pair("CamFrame",1)) to ::receivedMessageHandler ))))
 //    var mqttCamClient: MQTTCameraClient? = null
@@ -73,10 +68,6 @@ class AppViewModel  @Inject constructor(
 
     init {
 
-        //mqttClient.
-//        Timber.plant(Timber.DebugTree())
-//        Timber.plant(Timber.)
-
         viewModelScope.launch(Dispatchers.Default){
             while (!mqttClient.isConnected) {
                 delay(100)
@@ -87,8 +78,8 @@ class AppViewModel  @Inject constructor(
         }
 
 //        _camClients.value.forEach{it.sendRequest()}
-
-//        timer.schedule(syncTask,500,100)
+        timer = Timer()
+        timer.schedule(syncTask,500,500)
     }
 
 
@@ -126,20 +117,20 @@ class AppViewModel  @Inject constructor(
 
 
     fun run(){
-        Log.d("L_TMR","execute task in viewModel")
+        Timber.tag("L_TMR").d("execute task in viewModel")
 
-        var tmpL=listOf<MQTTCameraClient>()
+//        var tmpL=listOf<MQTTCameraClient>()
 
         _camClients.value.forEach {
-            if(it.checkTimeOut()){
-                Log.d("L_TMR","timeout ${it.deviceName}:${it.addressId}")
-                it.sendRequest()
+            if(it.timerTasks()){
+//                Log.d("L_TMR","timeout ${it.deviceName}:${it.addressId}")
+//                it.sendRequest()
             }
 //            tmpL = tmpL.plus(it)
         }
 
-        _camClients.value = tmpL
-        Log.d("L_TMR",_camClients.value.toString())
+//        _camClients.value = tmpL
+//        Log.d("L_TMR",_camClients.value.toString())
 //        _strList.value += "Fuck You!"
     }
 

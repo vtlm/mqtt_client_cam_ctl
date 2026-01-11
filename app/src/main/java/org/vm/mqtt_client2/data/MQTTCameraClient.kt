@@ -2,7 +2,6 @@ package org.vm.mqtt_client2.data
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.util.Log
 import com.google.flatbuffers.FlatBufferBuilder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,6 +43,9 @@ class MQTTCameraClient (
     val jpgImage: StateFlow<Bitmap?> = _jpgImage.asStateFlow()
 
     var requestFrame = false
+    var timeOutHBCnt = 0
+    var timeOutHBMaxCnt = 5
+    var notifiedHB = false
     var timeOutCnt = 0
     var timeOutMaxCnt = 5
     var framesCnt = 0
@@ -94,11 +96,16 @@ class MQTTCameraClient (
 
         if(appViewModel.appState == 0){
             Timber.tag("STATE").d("HB in paused")
-            notify(mqttClient.applicationContext,
-                "MQTT Cam",
-                "MQTT ${statusMessage.counter} times"
-            )
 
+        }
+        timeOutHBCnt=0
+        if(notifiedHB) {
+            notifiedHB=false
+            notify(
+                mqttClient.applicationContext,
+                "MQTT Cam ${deviceName} ${addressId}",
+                "MQTT HB restored"
+            )
         }
     }
 
@@ -111,13 +118,14 @@ class MQTTCameraClient (
         framesCnt++
     }
 
-    fun packBufferParam1(param1: Short){
+    private fun packBufferParam1(param1: Short){
         builder.clear()
         Buffer.startBuffer(builder)
         Buffer.addParam1(builder, param1)
         val bufferOut= Buffer.endBuffer(builder)
         builder.finish(bufferOut)
     }
+
     @Deprecated("obsolete")
     fun sendRequest(){
         packBufferParam1(cnt++)
@@ -125,14 +133,25 @@ class MQTTCameraClient (
         mqttClient.publishMessage("$deviceName/$addressId/CamCtl", builder.sizedByteArray(), 2)
     }
 
-    fun sendConfig(){
+    private fun sendConfig(){
         packBufferParam1(config)
         mqttClient.publishMessage("$deviceName/$addressId/CamCtl", builder.sizedByteArray(), 2)
     }
 
-    fun checkTimeOut(): Boolean{
-        timeOutCnt+=1
-        return timeOutCnt >= timeOutMaxCnt
+    fun timerTasks(): Boolean{
+        timeOutHBCnt+=1
+        if(timeOutHBCnt >= timeOutHBMaxCnt){
+            if(!notifiedHB) {
+                notifiedHB=true
+                notify(
+                    mqttClient.applicationContext,
+                    "MQTT Cam ${deviceName} ${addressId}",
+                    "MQTT HB timeout"
+                )
+            }
+
+        }
+        return true
     }
 
 
