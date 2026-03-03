@@ -1,11 +1,6 @@
 package org.vm.mqtt_client2.data
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.viewModelScope
 import info.mqtt.android.service.MqttAndroidClient
 import kotlinx.coroutines.delay
@@ -17,44 +12,7 @@ import org.eclipse.paho.client.mqttv3.IMqttToken
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttMessage
-import org.vm.mqtt_client2.CHANNEL_ID
-import org.vm.mqtt_client2.R
 import timber.log.Timber
-
-
-const val NOTIFICATION_ID = 0x335577;
-
-fun notify(applicationContext: Context, title: String, text: String){
-    val builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-        .setSmallIcon(R.drawable.baseline_warning_24)
-        .setContentTitle(title)
-        .setContentText(text)
-//                        .setStyle(NotificationCompat.BigTextStyle()
-//                            .bigText("Much longer text that cannot fit one line..."))
-        .setPriority(NotificationCompat.PRIORITY_HIGH)
-
-    with(NotificationManagerCompat.from(applicationContext)) {
-        if (ActivityCompat.checkSelfPermission(
-                applicationContext,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            // ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            // public fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
-            //                                        grantResults: IntArray)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-
-            return@with
-        }
-        // notificationId is a unique int for each notification that you must define.
-        notify(NOTIFICATION_ID, builder.build())
-    }
-
-}
-
 
 class MQTTClient (val applicationContext: Context,
     appViewModel: AppViewModel
@@ -92,7 +50,7 @@ class MQTTClient (val applicationContext: Context,
 //                        val (topic, qos) = it
 //                        subscribeToTopic(topic, qos)
 //                    }
-                    topicHandler.subscribe(mqttAndroidClient)
+//                    topicHandler.subscribe(mqttAndroidClient)
 
                     isConnected = true
 
@@ -100,6 +58,16 @@ class MQTTClient (val applicationContext: Context,
                     Timber.tag("MQTT_D").d("Connected: $serverURI")
                     appViewModel._mqttStatus.value = "Connected";
                     notify(applicationContext,"MQTT Cam","MQTT connected")
+                    mqttAndroidClient.subscribe("#", 2, null, object : IMqttActionListener {
+                        override fun onSuccess(asyncActionToken: IMqttToken) {
+                            Timber.tag("MQTT_D").d("Subscribed! #")
+//                publishMessage("CamCtl", "getFrame")
+                        }
+                        override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                            Timber.tag("MQTT_D").d("Failed to subscribe $exception")
+                        }
+                    })
+
                 }
             }
 
@@ -111,12 +79,13 @@ class MQTTClient (val applicationContext: Context,
             }
 
             override fun messageArrived(topic: String, message: MqttMessage) {
+                Timber.tag("MQTT_D").d("Incoming message: %s %s", topic, String(message.payload).length)
+                appViewModel.addIncomingMqttMessage(Pair(topic, message))
                 topicHandler.handle(topic, message)
 //                receivedMessageHandler(topic, message)
 
 //                val data = String(message.payload, charset("UTF-8"))
 //                Log.d("MQTT_D", "arrived: $topic $data")
-//                Timber.tag("MQTT_D").d("Incoming message: " + String(message.payload).length)
             }
 
             override fun deliveryComplete(token: IMqttDeliveryToken) = Unit
@@ -124,7 +93,7 @@ class MQTTClient (val applicationContext: Context,
 
         val mqttConnectOptions = MqttConnectOptions()
         mqttConnectOptions.isAutomaticReconnect = true
-        mqttConnectOptions.isCleanSession = false
+        mqttConnectOptions.isCleanSession = true//false
 
         Timber.tag("MQTT_D").d("Connecting: $MQTT_BROKER_SERVER_URI")
 
@@ -228,7 +197,7 @@ class MQTTClient (val applicationContext: Context,
 
     companion object {
         private const val MQTT_BROKER_SERVER_URI = "tcp://375333526167.dyndns.mts.by:1883"
-        private var clientId = "MobileApp"//"BasicSample" + System.currentTimeMillis()
+        private var clientId = "MobileApp4"//"BasicSample" + System.currentTimeMillis()
     }
 
 

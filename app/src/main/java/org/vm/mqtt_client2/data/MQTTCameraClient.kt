@@ -31,15 +31,15 @@ class MQTTCameraClient (
     var config:Short=0;
 //    @Inject
 //    lateinit var userPreferencesRepository: UserPreferencesRepository
-    var _isStremingJpg = MutableStateFlow<Boolean>(false)
-    val isStreamingJpg: StateFlow<Boolean> = _isStremingJpg.asStateFlow()
+    var _isStreamingJpg = MutableStateFlow<Boolean>(false)
+    val isStreamingJpg: StateFlow<Boolean> = _isStreamingJpg.asStateFlow()
     var _isOnGuard = MutableStateFlow<Boolean>(false)
     val isOnGuard: StateFlow<Boolean> = _isOnGuard.asStateFlow()
 
-    var _heartBeatCnt = MutableStateFlow<Int>(0)
+    private var _heartBeatCnt = MutableStateFlow<Int>(0)
     val heartBeatCnt: StateFlow<Int> = _heartBeatCnt.asStateFlow()
 
-    val _jpgImage = MutableStateFlow<Bitmap?>(null)
+    private val _jpgImage = MutableStateFlow<Bitmap?>(null)
     val jpgImage: StateFlow<Bitmap?> = _jpgImage.asStateFlow()
 
     var requestFrame = false
@@ -54,8 +54,8 @@ class MQTTCameraClient (
 
 
     init{
-        mqttClient.subscribe(listOf(Pair("$deviceName/$addressId/CamFrame",1)), ::receivedImageHandler)
-        mqttClient.subscribe(listOf(Pair("$deviceName/$addressId/HeartBeat",1)), ::heartBeatHandler)
+        mqttClient.subscribe(listOf(Pair("$deviceName/$addressId/CamFrame",2)), ::receivedImageHandler)
+        mqttClient.subscribe(listOf(Pair("$deviceName/$addressId/HeartBeat",2)), ::heartBeatHandler)
 //        mqttClient.publishMessage("CamCtl/$name", "getFrame")
 
 //        appViewModel.viewModelScope.launch {
@@ -69,7 +69,7 @@ class MQTTCameraClient (
     }
 
     fun setStreamingJpg(value: Boolean){
-        _isStremingJpg.value = value
+        _isStreamingJpg.value = value
         config = if(value){
             config or SC_STREAM_JPG
         }else{
@@ -103,7 +103,7 @@ class MQTTCameraClient (
             notifiedHB=false
             notify(
                 mqttClient.applicationContext,
-                "MQTT Cam ${deviceName} ${addressId}",
+                "MQTT Cam $deviceName $addressId",
                 "MQTT HB restored"
             )
         }

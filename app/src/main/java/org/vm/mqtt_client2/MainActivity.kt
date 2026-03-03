@@ -40,6 +40,7 @@ import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.vm.mqtt_client2.data.AppViewModel
 import org.vm.mqtt_client2.data.MQTTCameraClient
 import org.vm.mqtt_client2.ui.theme.Mqtt_client2Theme
@@ -280,6 +281,7 @@ class MainActivity : ComponentActivity() {
             Checkbox(checked = appViewModel.isOnGuard.collectAsState().value,
                 onCheckedChange = {appViewModel.setIsOnGuard(it)} )
             ShowCamClients(appViewModel.camClients.collectAsState().value)
+            ShowMessagesLog(appViewModel.incomingMqttMessages.collectAsState().value)
         }
 
     }
@@ -327,12 +329,23 @@ fun CameraScreen(mqttCameraClient: MQTTCameraClient){
             }
             Row (verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
-                    checked = mqttCameraClient._isStremingJpg.collectAsState().value,
+                    checked = mqttCameraClient._isStreamingJpg.collectAsState().value,
                     onCheckedChange = { mqttCameraClient.setStreamingJpg(it) })
                 Text("Streaming Jpg")
             }
             Row (verticalAlignment = Alignment.CenterVertically) {
                 Text("Frame: ${mqttCameraClient.framesCnt}")
+            }
+        }
+    }
+}
+
+@Composable
+fun ShowMessagesLog(messages: List<Pair<String, MqttMessage>>?){
+    LazyColumn() {
+        messages?.forEach {
+            item {
+                Text("${it.first} ${it.second}")
             }
         }
     }

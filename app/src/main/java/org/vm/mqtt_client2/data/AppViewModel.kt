@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.eclipse.paho.client.mqttv3.MqttMessage
 import timber.log.Timber
 import java.util.Timer
 import java.util.TimerTask
@@ -40,6 +41,8 @@ class AppViewModel  @Inject constructor(
     private val _progressTitle = MutableStateFlow("")
     val progressTitle: StateFlow<String> = _progressTitle.asStateFlow()
 
+    private val _incomingMqttMessages = MutableStateFlow(listOf<Pair<String, MqttMessage>>())
+    val incomingMqttMessages: StateFlow<List<Pair<String, MqttMessage>>> = _incomingMqttMessages.asStateFlow()
 
     var _isOnGuard = MutableStateFlow<Boolean>(false)
     val isOnGuard: StateFlow<Boolean> = _isOnGuard.asStateFlow()
@@ -72,14 +75,14 @@ class AppViewModel  @Inject constructor(
             while (!mqttClient.isConnected) {
                 delay(100)
             }
-            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "152", mqttClient))
-            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "153", mqttClient))
-            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "154", mqttClient))
+//            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "152", mqttClient))
+//            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "153", mqttClient))
+//            _camClients.value = _camClients.value.plus(MQTTCameraClient(this@AppViewModel, "MilkVDuo256Cam", "154", mqttClient))
         }
 
 //        _camClients.value.forEach{it.sendRequest()}
         timer = Timer()
-        timer.schedule(syncTask,500,500)
+//        timer.schedule(syncTask,500,500)
     }
 
 
@@ -115,9 +118,12 @@ class AppViewModel  @Inject constructor(
         super.onDestroy(owner)
     }
 
+    fun addIncomingMqttMessage(message: Pair<String, MqttMessage>){
+        _incomingMqttMessages.value = _incomingMqttMessages.value.plus(message)
+    }
 
     fun run(){
-        Timber.tag("L_TMR").d("execute task in viewModel")
+//        Timber.tag("L_TMR").d("execute task in viewModel")
 
 //        var tmpL=listOf<MQTTCameraClient>()
 
